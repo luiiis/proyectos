@@ -1,0 +1,112 @@
+# ============================================================
+# Kubernetes - Deployment del Backend Auth
+# ============================================================
+#
+# ¿Qué es un Deployment?
+# - Define CÓMO se ejecuta tu aplicación en Kubernetes.
+# - Especifica: imagen Docker, réplicas, variables de entorno, recursos.
+# - Kubernetes se encarga de mantener las réplicas corriendo.
+# - Si un pod muere, Kubernetes lo recrea automáticamente.
+#
+# ¿Qué es un Pod?
+# - Es la unidad mínima en Kubernetes (1 o más contenedores).
+# - Cada réplica del deployment es un pod.
+#
+# replicas: 2 → Kubernetes mantiene 2 instancias corriendo (alta disponibilidad).
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-auth
+  namespace: fullstack-app
+  labels:
+    app: backend-auth
+spec:
+  replicas: 2  # 2 instancias para alta disponibilidad
+  selector:
+    matchLabels:
+      app: backend-auth
+  template:
+    metadata:
+      labels:
+        app: backend-auth
+    spec:
+      containers:
+        - name: backend-auth
+          image: tu-usuario/backend-auth:latest  # Cambiar por tu imagen
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MYSQL_HOST
+              value: "mysql-service"
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: mysql-root-password
+            - name: ORACLE_HOST
+              value: "oracle-service"
+            - name: ORACLE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: oracle-password
+            - name: SQLSERVER_HOST
+              value: "sqlserver-service"
+            - name: SQLSERVER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: sqlserver-password
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: db-secrets
+                  key: jwt-secret
+            - name: REDIS_HOST
+              value: "redis-service"
+          # Recursos: cuánta CPU y RAM puede usar cada pod
+          resources:
+            requests:       # Mínimo garantizado
+              memory: "256Mi"
+              cpu: "250m"   # 0.25 CPU cores
+            limits:         # Máximo permitido
+              memory: "512Mi"
+              cpu: "500m"   # 0.5 CPU cores
+          # Health checks: Kubernetes verifica que la app está viva
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 60  # Esperar 60s antes de verificar
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 5
+
+---
+# ============================================================
+# Service - Expone el Deployment internamente en el cluster
+# ============================================================
+#
+# ¿Qué es un Service?
+# - Es un "nombre DNS" estable para acceder a los pods.
+# - Los pods pueden morir y recrearse con IPs diferentes.
+# - El Service siempre apunta a los pods correctos.
+# - Otros pods usan "backend-auth-service:8080" para conectarse.
+#
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-auth-service
+  namespace: fullstack-app
+spec:
+  selector:
+    app: backend-auth
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: ClusterIP  # Solo accesible dentro del cluster

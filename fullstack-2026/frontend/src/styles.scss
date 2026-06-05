@@ -1,0 +1,10 @@
+@use '@angular/material' as mat;
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.spacer { flex: 1 1 auto; }
+.full-width { width: 100%; }

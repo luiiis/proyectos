@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Accessibility (a11y) Reference</title>
+</head>
+<body>
+  <!-- ARIA Roles & Landmarks -->
+  <header role="banner">
+    <nav role="navigation" aria-label="Main navigation">
+      <ul>
+        <li><a href="#main">Skip to content</a></li>
+        <li><a href="/home">Home</a></li>
+        <li><a href="/about">About</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" role="main" aria-label="Main content">
+    <!-- ARIA Labels -->
+    <form aria-labelledby="form-title">
+      <h2 id="form-title">Contact Form</h2>
+
+      <label for="name">Full Name</label>
+      <input id="name" type="text" aria-required="true" aria-describedby="name-hint">
+      <span id="name-hint" class="sr-only">Enter your first and last name</span>
+
+      <label for="email">Email</label>
+      <input id="email" type="email" aria-required="true" aria-invalid="false">
+
+      <!-- Keyboard Navigation -->
+      <button type="submit" tabindex="0" aria-label="Submit contact form">
+        Submit
+      </button>
+    </form>
+
+    <!-- Live Region for dynamic updates -->
+    <div aria-live="polite" aria-atomic="true" id="status">
+      <!-- Status messages announced by screen readers -->
+    </div>
+
+    <!-- Focus Management -->
+    <dialog id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h2 id="modal-title">Confirmation</h2>
+      <p>Are you sure you want to proceed?</p>
+      <button autofocus (click)="closeModal()">Confirm</button>
+      <button (click)="closeModal()">Cancel</button>
+    </dialog>
+
+    <!-- Accessible Table -->
+    <table role="grid" aria-label="User data table">
+      <caption>List of registered users</caption>
+      <thead>
+        <tr><th scope="col">Name</th><th scope="col">Role</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Alice</td><td>Admin</td></tr>
+      </tbody>
+    </table>
+  </main>
+
+  <footer role="contentinfo">
+    <p>&copy; 2024 Accessible App</p>
+  </footer>
+
+  <script>
+    // Focus management example
+    function openModal() {
+      const modal = document.getElementById('modal');
+      modal.showModal();
+      modal.querySelector('button').focus();
+    }
+    function closeModal() {
+      document.getElementById('modal').close();
+      document.querySelector('[aria-label="Submit contact form"]').focus();
+    }
+    console.log('Reference file: ejemplo-a11y.html - ARIA, keyboard nav & focus management for use in an Angular project');
+  </script>
+</body>
+</html>

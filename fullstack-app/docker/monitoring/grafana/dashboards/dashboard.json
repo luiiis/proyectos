@@ -1,0 +1,68 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "Peticiones HTTP por segundo",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "rate(http_server_requests_seconds_count{application=\"backend-auth\"}[1m])",
+          "legendFormat": "{{method}} {{uri}} - {{status}}"
+        }
+      ]
+    },
+    {
+      "title": "Tiempo de respuesta (p95)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application=\"backend-auth\"}[5m]))",
+          "legendFormat": "p95 - {{uri}}"
+        }
+      ]
+    },
+    {
+      "title": "Uso de Memoria JVM",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes{application=\"backend-auth\", area=\"heap\"} / 1024 / 1024",
+          "legendFormat": "Heap Used (MB)"
+        },
+        {
+          "expr": "jvm_memory_max_bytes{application=\"backend-auth\", area=\"heap\"} / 1024 / 1024",
+          "legendFormat": "Heap Max (MB)"
+        }
+      ]
+    },
+    {
+      "title": "Conexiones de Base de Datos",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "hikaricp_connections_active{application=\"backend-auth\"}",
+          "legendFormat": "Activas - {{pool}}"
+        },
+        {
+          "expr": "hikaricp_connections_idle{application=\"backend-auth\"}",
+          "legendFormat": "Idle - {{pool}}"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 38,
+  "tags": ["spring-boot", "backend"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "Sistema de Gestión - Monitoreo",
+  "uid": "fullstack-dashboard"
+}

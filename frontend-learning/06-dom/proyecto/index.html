@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 06 - DOM Manipulation</title>
+    <style>
+        body { font-family: system-ui; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .card { border: 1px solid #ddd; padding: 16px; margin: 8px 0; border-radius: 8px; }
+        .card.highlight { background: #e3f2fd; border-color: #1976d2; }
+        button { padding: 8px 16px; margin: 4px; cursor: pointer; border-radius: 4px; border: 1px solid #ccc; }
+        button:hover { background: #e0e0e0; }
+        #lista-productos { list-style: none; padding: 0; }
+        #lista-productos li { padding: 8px; margin: 4px 0; background: #f5f5f5; border-radius: 4px; display: flex; justify-content: space-between; }
+        .btn-eliminar { background: #f44336; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Módulo 06: Manipulación del DOM</h1>
+    <p>Abre la consola (F12) para ver los logs.</p>
+
+    <section class="card">
+        <h2>1. Seleccionar elementos</h2>
+        <p id="parrafo-demo">Este párrafo tiene id="parrafo-demo"</p>
+        <div class="item">Item 1</div>
+        <div class="item">Item 2</div>
+        <div class="item">Item 3</div>
+        <button onclick="seleccionarElementos()">Probar selectores</button>
+    </section>
+
+    <section class="card">
+        <h2>2. Crear y agregar elementos</h2>
+        <button onclick="agregarProducto()">Agregar Producto</button>
+        <button onclick="limpiarLista()">Limpiar Lista</button>
+        <ul id="lista-productos"></ul>
+    </section>
+
+    <section class="card">
+        <h2>3. Eventos y Delegación</h2>
+        <input type="text" id="input-busqueda" placeholder="Escribe para buscar..." style="padding:8px; width:100%; margin-bottom:8px;">
+        <p id="resultado-busqueda"></p>
+    </section>
+
+    <script>
+        // ═══════ 1. SELECCIONAR ELEMENTOS ═══════
+        function seleccionarElementos() {
+            // getElementById
+            const parrafo = document.getElementById('parrafo-demo');
+            console.log('getElementById:', parrafo.textContent);
+
+            // querySelector (CSS selector)
+            const primero = document.querySelector('.item');
+            console.log('querySelector(.item):', primero.textContent);
+
+            // querySelectorAll (todos los que coinciden)
+            const todos = document.querySelectorAll('.item');
+            console.log('querySelectorAll(.item):', todos.length, 'elementos');
+
+            // Modificar estilo
+            parrafo.style.color = 'blue';
+            parrafo.style.fontWeight = 'bold';
+            parrafo.textContent = '¡Modificado con JavaScript!';
+
+            todos.forEach((el, i) => {
+                el.style.background = `hsl(${i * 60}, 70%, 90%)`;
+            });
+        }
+
+        // ═══════ 2. CREAR ELEMENTOS ═══════
+        let contadorProductos = 0;
+        const productos = ['Laptop HP', 'Monitor Dell', 'Teclado MX', 'Mouse Logitech', 'SSD Samsung'];
+
+        function agregarProducto() {
+            const lista = document.getElementById('lista-productos');
+            const nombre = productos[contadorProductos % productos.length];
+            contadorProductos++;
+
+            // Crear elemento
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span>${nombre} - $${(Math.random() * 20000 + 500).toFixed(2)}</span>
+                <button class="btn-eliminar" onclick="this.parentElement.remove()">✕</button>
+            `;
+            lista.appendChild(li);
+        }
+
+        function limpiarLista() {
+            document.getElementById('lista-productos').innerHTML = '';
+            contadorProductos = 0;
+        }
+
+        // ═══════ 3. EVENTOS ═══════
+        // Evento con debounce (espera a que dejes de escribir)
+        let timeout;
+        document.getElementById('input-busqueda').addEventListener('input', (event) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                const valor = event.target.value;
+                document.getElementById('resultado-busqueda').textContent =
+                    valor ? `Buscando: "${valor}"...` : '';
+                console.log('Búsqueda:', valor);
+            }, 300); // Espera 300ms después del último tecleo
+        });
+
+        console.log('═══ Módulo 06: DOM cargado. Haz clic en los botones. ═══');
+    </script>
+</body>
+</html>

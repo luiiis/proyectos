@@ -1,0 +1,20 @@
+server:
+  port: 8080
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ai_db
+    username: postgres
+    password: postgres123
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:sk-demo}
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
+      embedding:
+        options:
+          model: text-embedding-ada-002

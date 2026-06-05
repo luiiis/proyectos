@@ -1,0 +1,71 @@
+# Schema GraphQL: define QUE datos se pueden pedir y QUE operaciones existen
+
+# Tipos (equivalente a las entidades/DTOs)
+type Producto {
+    id: ID!
+    nombre: String!
+    descripcion: String
+    precio: Float!
+    stock: Int!
+    categoria: String
+    sku: String
+    activo: Boolean!
+}
+
+type Cliente {
+    id: ID!
+    nombre: String!
+    apellido: String
+    email: String
+    ciudad: String
+    tipo: String
+}
+
+type Venta {
+    id: ID!
+    numero: String!
+    total: Float!
+    estado: String!
+    cliente: Cliente
+    fecha: String
+}
+
+# Queries (lectura)
+type Query {
+    # Listar productos (con filtro opcional)
+    productos(categoria: String, limit: Int): [Producto!]!
+    
+    # Buscar producto por ID
+    producto(id: ID!): Producto
+    
+    # Buscar por nombre
+    buscarProductos(nombre: String!): [Producto!]!
+    
+    # Listar clientes
+    clientes(tipo: String): [Cliente!]!
+    
+    # Ventas recientes
+    ventas(limit: Int): [Venta!]!
+}
+
+# Mutations (escritura)
+type Mutation {
+    # Crear producto
+    crearProducto(input: ProductoInput!): Producto!
+    
+    # Actualizar producto
+    actualizarProducto(id: ID!, input: ProductoInput!): Producto!
+    
+    # Eliminar producto
+    eliminarProducto(id: ID!): Boolean!
+}
+
+# Input types (lo que envia el cliente para crear/actualizar)
+input ProductoInput {
+    nombre: String!
+    descripcion: String
+    precio: Float!
+    stock: Int!
+    categoria: String
+    sku: String
+}

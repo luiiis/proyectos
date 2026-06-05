@@ -1,0 +1,70 @@
+# GitHub Actions CI/CD for Angular - Reference File
+name: Angular CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test -- --no-watch --code-coverage --browsers=ChromeHeadless
+
+      - name: Build production
+        run: npm run build -- --configuration=production
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+
+      - name: Deploy to hosting
+        run: |
+          echo "Deploying to production..."
+          # Example: Firebase deploy
+          # npx firebase-tools deploy --only hosting --token ${{ secrets.FIREBASE_TOKEN }}
+          # Example: AWS S3
+          # aws s3 sync dist/ s3://${{ secrets.S3_BUCKET }} --delete
+
+# Reference file: github-actions.yml - CI/CD pipeline for use in an Angular project

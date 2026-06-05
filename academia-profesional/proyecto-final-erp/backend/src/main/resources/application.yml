@@ -1,0 +1,29 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: erp-backend
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/erp_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres123}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: 6379
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000
+jwt:
+  secret: ${JWT_SECRET:Y2xhdmVTZWNyZXRhRVJQMjAyNk11eUxhcmdhWVNlZ3VyYVBhcmFGaXJtYXJUb2tlbnM=}
+  expiration: 86400000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,info

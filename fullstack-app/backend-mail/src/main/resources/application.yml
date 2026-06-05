@@ -1,0 +1,48 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: backend-mail
+
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:auth_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  # ============ Mail Configuration ============
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:tu-correo@gmail.com}
+    password: ${MAIL_PASSWORD:tu-app-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+# ============ JWT (mismo secret que backend-auth) ============
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationMustBe256BitsLong!!}
+
+# ============ App Config ============
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:4200}
+  password-reset-expiration: 3600000  # 1 hora
+
+cors:
+  allowed-origins: ${CORS_ORIGINS:http://localhost:4200}

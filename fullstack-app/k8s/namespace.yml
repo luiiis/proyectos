@@ -1,0 +1,18 @@
+# ============================================================
+# Kubernetes - Namespace
+# ============================================================
+#
+# ¿Qué es un Namespace?
+# - Es como una "carpeta" dentro de Kubernetes.
+# - Aísla recursos: los pods de este proyecto no interfieren con otros.
+# - Permite aplicar políticas de seguridad y cuotas por namespace.
+#
+# Comando: kubectl apply -f namespace.yml
+#
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fullstack-app
+  labels:
+    app: fullstack
+    environment: production

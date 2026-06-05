@@ -1,0 +1,76 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: backend-auth
+
+  # ============ MySQL DataSource (Usuarios/Auth) ============
+  datasource:
+    mysql:
+      url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DB:auth_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      username: ${MYSQL_USER:root}
+      password: ${MYSQL_PASSWORD:ENC(encryptedPasswordHere)}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      hikari:
+        pool-name: mysql-pool
+        maximum-pool-size: 10
+
+  # ============ Oracle DataSource (Productos/Inventario) ============
+    oracle:
+      url: jdbc:oracle:thin:@${ORACLE_HOST:localhost}:${ORACLE_PORT:1521}/${ORACLE_SID:XEPDB1}
+      username: ${ORACLE_USER:products_user}
+      password: ${ORACLE_PASSWORD:ENC(encryptedPasswordHere)}
+      driver-class-name: oracle.jdbc.OracleDriver
+      hikari:
+        pool-name: oracle-pool
+        maximum-pool-size: 10
+
+  # ============ SQL Server DataSource (Logs/Auditoría) ============
+    sqlserver:
+      url: jdbc:sqlserver://${SQLSERVER_HOST:localhost}:${SQLSERVER_PORT:1433};databaseName=${SQLSERVER_DB:logs_db};encrypt=false;trustServerCertificate=true
+      username: ${SQLSERVER_USER:sa}
+      password: ${SQLSERVER_PASSWORD:ENC(encryptedPasswordHere)}
+      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      hikari:
+        pool-name: sqlserver-pool
+        maximum-pool-size: 10
+
+  jpa:
+    open-in-view: false
+    show-sql: false
+
+# ============ JWT Configuration ============
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationMustBe256BitsLong!!}
+  expiration: 86400000  # 24 horas en milisegundos
+  refresh-expiration: 604800000  # 7 días
+
+# ============ Redis ============
+spring.data.redis:
+  host: ${REDIS_HOST:localhost}
+  port: ${REDIS_PORT:6379}
+
+# ============ Actuator (Métricas) ============
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# ============ Jasypt Encryption ============
+jasypt:
+  encryptor:
+    password: ${JASYPT_PASSWORD:masterEncryptionKey}
+    algorithm: PBEWithMD5AndDES
+
+# ============ CORS ============
+cors:
+  allowed-origins: ${CORS_ORIGINS:http://localhost:4200}

@@ -1,0 +1,14 @@
+server:
+  port: 8080
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/ventas_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres123}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+jwt:
+  secret: ${JWT_SECRET:Y2xhdmVTZWNyZXRhVmVudGFzMjAyNk11eUxhcmdhWVNlZ3VyYQ==}
+  expiration: 86400000

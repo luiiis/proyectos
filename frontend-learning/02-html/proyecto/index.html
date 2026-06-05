@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 02 - HTML5 Semántico</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
+        nav { background: #1a237e; padding: 1rem; border-radius: 8px; }
+        nav a { color: white; margin-right: 1rem; text-decoration: none; }
+        section { margin: 2rem 0; padding: 1rem; border-left: 4px solid #1a237e; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f5f5f5; }
+        form { max-width: 500px; }
+        label { display: block; margin-top: 1rem; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ccc; border-radius: 4px; }
+        button { margin-top: 1rem; padding: 10px 20px; background: #1a237e; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <!-- ═══════ HEADER: Encabezado del sitio ═══════ -->
+    <header>
+        <h1>Sistema de Gestión Empresarial</h1>
+        <p>Ejemplo de HTML5 semántico con formularios y tablas</p>
+    </header>
+
+    <!-- ═══════ NAV: Navegación principal ═══════ -->
+    <nav aria-label="Navegación principal">
+        <a href="#productos">Productos</a>
+        <a href="#formulario">Nuevo Producto</a>
+        <a href="#tabla">Inventario</a>
+        <a href="#contacto">Contacto</a>
+    </nav>
+
+    <!-- ═══════ MAIN: Contenido principal ═══════ -->
+    <main>
+        <!-- SECTION: Agrupación temática -->
+        <section id="productos">
+            <h2>Catálogo de Productos</h2>
+            <p>Sección que muestra los productos disponibles.</p>
+
+            <!-- ARTICLE: Contenido independiente (podría existir solo) -->
+            <article>
+                <h3>Laptop HP ProBook</h3>
+                <p>Laptop empresarial con procesador Intel Core i7.</p>
+                <p><strong>Precio:</strong> $18,999.00</p>
+                <p><time datetime="2026-05-30">30 de mayo de 2026</time></p>
+            </article>
+        </section>
+
+        <!-- ═══════ FORMULARIO COMPLETO ═══════ -->
+        <section id="formulario">
+            <h2>Registrar Nuevo Producto</h2>
+            <form action="#" method="POST" novalidate>
+                <label for="nombre">Nombre del producto *</label>
+                <input type="text" id="nombre" name="nombre" required minlength="3" maxlength="150"
+                       placeholder="Ej: Laptop HP ProBook" aria-required="true">
+
+                <label for="precio">Precio *</label>
+                <input type="number" id="precio" name="precio" required min="0.01" step="0.01"
+                       placeholder="18999.99">
+
+                <label for="stock">Stock</label>
+                <input type="number" id="stock" name="stock" min="0" value="0">
+
+                <label for="categoria">Categoría</label>
+                <select id="categoria" name="categoria">
+                    <option value="">-- Seleccionar --</option>
+                    <option value="electronica">Electrónica</option>
+                    <option value="perifericos">Periféricos</option>
+                    <option value="mobiliario">Mobiliario</option>
+                    <option value="software">Software</option>
+                </select>
+
+                <label for="descripcion">Descripción</label>
+                <textarea id="descripcion" name="descripcion" rows="4"
+                          placeholder="Descripción detallada del producto..."></textarea>
+
+                <label for="imagen">Imagen del producto</label>
+                <input type="file" id="imagen" name="imagen" accept="image/*">
+
+                <label>
+                    <input type="checkbox" name="activo" checked> Producto activo
+                </label>
+
+                <button type="submit">Guardar Producto</button>
+            </form>
+        </section>
+
+        <!-- ═══════ TABLA DE DATOS ═══════ -->
+        <section id="tabla">
+            <h2>Inventario Actual</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Laptop HP ProBook</td>
+                        <td>Electrónica</td>
+                        <td>$18,999.00</td>
+                        <td>25</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Monitor Dell 27"</td>
+                        <td>Electrónica</td>
+                        <td>$12,499.00</td>
+                        <td>15</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Teclado Logitech MX</td>
+                        <td>Periféricos</td>
+                        <td>$2,899.00</td>
+                        <td>40</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4"><strong>Total productos:</strong></td>
+                        <td><strong>80</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </section>
+    </main>
+
+    <!-- ═══════ ASIDE: Contenido relacionado pero secundario ═══════ -->
+    <aside>
+        <h3>Estadísticas Rápidas</h3>
+        <ul>
+            <li>Productos activos: 500</li>
+            <li>Ventas hoy: 45</li>
+            <li>Alertas de stock: 12</li>
+        </ul>
+    </aside>
+
+    <!-- ═══════ FOOTER: Pie de página ═══════ -->
+    <footer>
+        <p>&copy; 2026 Sistema Empresarial. Módulo 02 - HTML5 Semántico.</p>
+    </footer>
+</body>
+</html>

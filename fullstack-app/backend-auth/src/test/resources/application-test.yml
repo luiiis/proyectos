@@ -1,0 +1,44 @@
+# ============================================================
+# Configuración para TESTS
+# Usa H2 (base de datos en memoria) en lugar de MySQL/Oracle/SQL Server
+# Esto permite ejecutar tests sin necesidad de tener las BDs reales corriendo
+# ============================================================
+
+spring:
+  datasource:
+    mysql:
+      url: jdbc:h2:mem:testdb_auth;DB_CLOSE_DELAY=-1;MODE=MySQL
+      username: sa
+      password:
+      driver-class-name: org.h2.Driver
+    oracle:
+      url: jdbc:h2:mem:testdb_products;DB_CLOSE_DELAY=-1
+      username: sa
+      password:
+      driver-class-name: org.h2.Driver
+    sqlserver:
+      url: jdbc:h2:mem:testdb_logs;DB_CLOSE_DELAY=-1
+      username: sa
+      password:
+      driver-class-name: org.h2.Driver
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  cache:
+    type: none  # Desactivar caché en tests para resultados predecibles
+
+jwt:
+  secret: dGVzdFNlY3JldEtleUZvclRlc3RpbmdQdXJwb3Nlc09ubHlNdXN0QmUyNTZCaXRz
+  expiration: 86400000
+  refresh-expiration: 604800000
+
+jasypt:
+  encryptor:
+    password: testKey
+    algorithm: PBEWithMD5AndDES
+
+cors:
+  allowed-origins: http://localhost:4200

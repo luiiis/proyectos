@@ -1,0 +1,20 @@
+groups:
+  - name: app-alerts
+    rules:
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket[5m])) > 2
+        for: 5m
+        labels: { severity: warning }
+        annotations: { summary: "Latencia p95 > 2 segundos" }
+
+      - alert: HighErrorRate
+        expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels: { severity: critical }
+        annotations: { summary: "Tasa de errores 5xx alta" }
+
+      - alert: HighMemory
+        expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} > 0.8
+        for: 10m
+        labels: { severity: warning }
+        annotations: { summary: "Memoria heap > 80%" }

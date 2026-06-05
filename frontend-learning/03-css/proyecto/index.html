@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 03 - CSS3 Dashboard Responsive</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <nav class="sidebar">
+            <h2 class="logo">📊 Dashboard</h2>
+            <ul class="nav-links">
+                <li><a href="#" class="active">🏠 Inicio</a></li>
+                <li><a href="#">📦 Productos</a></li>
+                <li><a href="#">🛒 Ventas</a></li>
+                <li><a href="#">👥 Clientes</a></li>
+                <li><a href="#">📈 Reportes</a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <header class="topbar">
+                <h1>Dashboard Principal</h1>
+                <span class="user">Carlos García</span>
+            </header>
+
+            <section class="kpis">
+                <div class="kpi-card">
+                    <span class="kpi-value">$1.2M</span>
+                    <span class="kpi-label">Ventas del Mes</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-value">3,450</span>
+                    <span class="kpi-label">Pedidos</span>
+                </div>
+                <div class="kpi-card">
+                    <span class="kpi-value">89%</span>
+                    <span class="kpi-label">Satisfacción</span>
+                </div>
+                <div class="kpi-card warning">
+                    <span class="kpi-value">12</span>
+                    <span class="kpi-label">Stock Bajo</span>
+                </div>
+            </section>
+
+            <section class="grid-content">
+                <div class="card large">
+                    <h3>Ventas por Mes</h3>
+                    <div class="chart-placeholder">📊 Gráfica aquí</div>
+                </div>
+                <div class="card">
+                    <h3>Top Productos</h3>
+                    <ol>
+                        <li>Laptop HP - 234 vendidos</li>
+                        <li>Monitor Dell - 189 vendidos</li>
+                        <li>Teclado MX - 156 vendidos</li>
+                    </ol>
+                </div>
+                <div class="card">
+                    <h3>Últimas Ventas</h3>
+                    <ul class="ventas-list">
+                        <li>V-001 - $18,999 <span class="badge">Completada</span></li>
+                        <li>V-002 - $5,400 <span class="badge">Completada</span></li>
+                        <li>V-003 - $12,300 <span class="badge pending">Pendiente</span></li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

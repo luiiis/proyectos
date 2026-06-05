@@ -1,0 +1,92 @@
+version: '3.9'
+
+# ════════════════════════════════════════════════════════════════
+# Proyecto 12: Stack completo contenerizado
+# 5 servicios: PostgreSQL + Redis + Backend + Frontend + PgAdmin
+# ════════════════════════════════════════════════════════════════
+
+services:
+  # ═══════ BASE DE DATOS ═══════
+  postgres:
+    image: postgres:16-alpine
+    container_name: docker-postgres
+    environment:
+      POSTGRES_DB: app_db
+      POSTGRES_PASSWORD: postgres123
+    ports: ["5432:5432"]
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d
+    networks: [app-net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    # Limitar recursos (buena práctica)
+    deploy:
+      resources:
+        limits: { memory: 512M, cpus: '1.0' }
+
+  # ═══════ CACHÉ ═══════
+  redis:
+    image: redis:7-alpine
+    container_name: docker-redis
+    ports: ["6379:6379"]
+    networks: [app-net]
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 3
+
+  # ═══════ BACKEND ═══════
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: docker-backend
+    ports: ["8080:8080"]
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/app_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres123
+      SPRING_DATA_REDIS_HOST: redis
+    networks: [app-net]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits: { memory: 512M, cpus: '1.0' }
+
+  # ═══════ FRONTEND ═══════
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: docker-frontend
+    ports: ["80:80"]
+    networks: [app-net]
+    depends_on: [backend]
+    restart: unless-stopped
+
+  # ═══════ ADMIN GUI ═══════
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: docker-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports: ["5050:80"]
+    networks: [app-net]
+    depends_on: [postgres]
+
+volumes:
+  pg_data:
+    driver: local
+
+networks:
+  app-net:
+    driver: bridge

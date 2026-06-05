@@ -1,0 +1,90 @@
+# ════════════════════════════════════════════════════════════════
+# Configuración Spring Boot 3.3 - Fullstack 2026
+# ════════════════════════════════════════════════════════════════
+
+server:
+  port: 8080
+  # Virtual Threads: cada request se maneja en un virtual thread
+  # Permite 100K+ requests concurrentes sin thread pool exhaustion
+  tomcat:
+    threads:
+      max: 200  # Threads de plataforma (cada uno maneja miles de virtual threads)
+
+spring:
+  application:
+    name: fullstack-2026
+
+  # ═══════ VIRTUAL THREADS (Java 21+) ═══════
+  # UNA línea que cambia todo: de ~200 requests simultáneos a ~100K+
+  threads:
+    virtual:
+      enabled: true
+
+  # ═══════ POSTGRESQL ═══════
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:fullstack2026}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    open-in-view: false  # Buena práctica: evita lazy loading accidental en controllers
+    hibernate:
+      ddl-auto: validate  # NUNCA "update" en producción. Flyway maneja migraciones.
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  # ═══════ FLYWAY (Migraciones de BD) ═══════
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # ═══════ REDIS ═══════
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+
+  # ═══════ CACHE ═══════
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000  # 5 minutos default TTL
+
+  # ═══════ SECURITY (OAuth2 con Keycloak) ═══════
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_URL:http://localhost:8180}/realms/${KEYCLOAK_REALM:fullstack}
+          # Spring Security descarga automáticamente las claves públicas de Keycloak
+          # para validar la firma de los tokens JWT
+
+# ═══════ OBSERVABILIDAD ═══════
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  tracing:
+    sampling:
+      probability: 1.0  # 100% de traces en desarrollo (reducir en producción)
+  otlp:
+    tracing:
+      endpoint: ${OTEL_ENDPOINT:http://localhost:4318/v1/traces}
+
+# ═══════ LOGGING ═══════
+logging:
+  level:
+    com.modern: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

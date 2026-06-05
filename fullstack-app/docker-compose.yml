@@ -1,0 +1,173 @@
+version: '3.8'
+
+services:
+  # ==================== DATABASES ====================
+
+  mysql:
+    image: mysql:8.0
+    container_name: fullstack-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootPassword123!}
+      MYSQL_DATABASE: ${MYSQL_DB:-auth_db}
+      MYSQL_USER: ${MYSQL_USER:-app_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-appPassword123!}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/init-scripts/mysql:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  oracle:
+    image: gvenzl/oracle-xe:21-slim
+    container_name: fullstack-oracle
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD:-oraclePassword123!}
+      APP_USER: ${ORACLE_USER:-products_user}
+      APP_USER_PASSWORD: ${ORACLE_APP_PASSWORD:-productsPass123!}
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+      - ./docker/init-scripts/oracle:/container-entrypoint-initdb.d
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: fullstack-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SQLSERVER_PASSWORD:-SqlServer123!}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+      - ./docker/init-scripts/sqlserver:/scripts
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${SQLSERVER_PASSWORD:-SqlServer123!}' -C -Q 'SELECT 1' || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  # ==================== BACKEND SERVICES ====================
+
+  # Inicializador de SQL Server (ejecuta scripts y se detiene)
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: fullstack-sqlserver-init
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      MSSQL_SA_PASSWORD: ${SQLSERVER_PASSWORD:-SqlServer123!}
+    volumes:
+      - ./docker/init-scripts/sqlserver:/scripts
+    entrypoint: ["/bin/bash", "/scripts/entrypoint.sh"]
+    networks:
+      - app-network
+    restart: "no"
+
+  backend-auth:
+    build:
+      context: .
+      dockerfile: docker/backend-auth.Dockerfile
+    container_name: fullstack-backend-auth
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: auth_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootPassword123!}
+      ORACLE_HOST: oracle
+      ORACLE_PORT: 1521
+      ORACLE_SID: XEPDB1
+      ORACLE_USER: ${ORACLE_USER:-products_user}
+      ORACLE_PASSWORD: ${ORACLE_APP_PASSWORD:-productsPass123!}
+      SQLSERVER_HOST: sqlserver
+      SQLSERVER_PORT: 1433
+      SQLSERVER_DB: logs_db
+      SQLSERVER_USER: sa
+      SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD:-SqlServer123!}
+      JWT_SECRET: ${JWT_SECRET:-bXlTZWNyZXRLZXlGb3JKV1RUb2tlbkdlbmVyYXRpb25NdXN0QmUyNTZCaXRzTG9uZyEh}
+      JASYPT_PASSWORD: ${JASYPT_PASSWORD:-masterEncryptionKey2024}
+      CORS_ORIGINS: http://localhost,http://frontend
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      oracle:
+        condition: service_healthy
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  backend-mail:
+    build:
+      context: .
+      dockerfile: docker/backend-mail.Dockerfile
+    container_name: fullstack-backend-mail
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: auth_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootPassword123!}
+      JWT_SECRET: ${JWT_SECRET:-bXlTZWNyZXRLZXlGb3JKV1RUb2tlbkdlbmVyYXRpb25NdXN0QmUyNTZCaXRzTG9uZyEh}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-tu-correo@gmail.com}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-tu-app-password}
+      FRONTEND_URL: http://localhost
+      CORS_ORIGINS: http://localhost,http://frontend
+    ports:
+      - "8081:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # ==================== FRONTEND ====================
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    container_name: fullstack-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend-auth
+      - backend-mail
+    networks:
+      - app-network
+    restart: unless-stopped
+
+# ==================== VOLUMES ====================
+volumes:
+  mysql_data:
+  oracle_data:
+  sqlserver_data:
+
+# ==================== NETWORKS ====================
+networks:
+  app-network:
+    driver: bridge

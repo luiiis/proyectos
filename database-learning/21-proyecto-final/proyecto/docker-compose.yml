@@ -1,0 +1,49 @@
+version: '3.9'
+
+# Docker Compose del Proyecto Final
+# Levanta: PostgreSQL + Redis + API Spring Boot
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: proyecto-final-postgres
+    environment:
+      POSTGRES_DB: empresa_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ../../19-docker/init/postgres:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: proyecto-final-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
+
+  api:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: proyecto-final-api
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/empresa_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres123
+      SPRING_DATA_REDIS_HOST: redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pg_data:

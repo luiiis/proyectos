@@ -1,0 +1,50 @@
+# ============================================================
+# Prometheus - Configuración
+# ============================================================
+#
+# ¿Qué es Prometheus?
+# - Es un sistema de monitoreo que RECOLECTA métricas de tus aplicaciones.
+# - Cada X segundos (scrape_interval) consulta los endpoints de métricas.
+# - Almacena las métricas en una base de datos de series temporales.
+# - Permite hacer queries y alertas sobre esas métricas.
+#
+# ¿Qué métricas recolecta de Spring Boot?
+# - Peticiones HTTP: cuántas, cuánto tardan, cuántas fallan.
+# - JVM: uso de memoria, garbage collection, threads.
+# - Conexiones a BD: pool activo, conexiones en espera.
+# - Custom: métricas que tú definas en tu código.
+#
+# Acceso: http://localhost:9090
+#
+
+global:
+  scrape_interval: 15s      # Cada 15 segundos consulta las métricas
+  evaluation_interval: 15s  # Cada 15 segundos evalúa las reglas de alerta
+
+# ==================== TARGETS (de dónde recolectar) ====================
+scrape_configs:
+
+  # Prometheus se monitorea a sí mismo
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Backend Auth - Spring Boot Actuator
+  - job_name: 'backend-auth'
+    metrics_path: '/actuator/prometheus'  # Endpoint que expone métricas
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['backend-auth:8080']
+        labels:
+          application: 'backend-auth'
+          environment: 'docker'
+
+  # Backend Mail - Spring Boot Actuator
+  - job_name: 'backend-mail'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['backend-mail:8081']
+        labels:
+          application: 'backend-mail'
+          environment: 'docker'
