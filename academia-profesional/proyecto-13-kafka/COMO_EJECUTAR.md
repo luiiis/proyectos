@@ -1,50 +1,63 @@
-# Cómo Ejecutar - Proyecto 13: Kafka Notificaciones
+# Cómo Ejecutar - Proyecto 13: Kafka
 
-## Arquitectura
-```
-┌──────────────┐     ┌─────────────┐     ┌──────────────┐
-│   Producer   │────→│    KAFKA    │────→│   Consumer   │
-│ (API ventas) │     │   (Topic)   │     │(Notificador) │
-│   :8080      │     │   :29092    │     │              │
-└──────────────┘     └─────────────┘     └──────────────┘
-                                                │
-                                         ┌──────┴──────┐
-                                         │  Enviar     │
-                                         │  Email/SMS  │
-                                         │  Log en BD  │
-                                         └─────────────┘
-```
+## Requisitos
+- Docker 24+ con Docker Compose v2
+- 4GB+ RAM asignados a Docker (Kafka necesita memoria)
 
-## Levantar
+## Ejecutar
+
 ```bash
 cd academia-profesional/proyecto-13-kafka
-docker compose up -d
 
-# Esperar ~30 segundos (Kafka tarda en arrancar)
+# Levantar TODO: Kafka + PostgreSQL + Producer + Consumer + UI
+docker compose up --build -d
+
+# Esperar ~45 segundos (Kafka tarda en arrancar)
+# Verificar que kafka está healthy:
 docker compose ps
-
-# Kafka UI: http://localhost:8090 (ver topics y mensajes)
-# Producer API: http://localhost:8080
 ```
 
 ## Probar
+
 ```bash
-# Publicar evento de venta (el producer lo envía a Kafka)
+# 1. Publicar un evento de prueba rápido:
+curl http://localhost:8080/api/ventas/test
+
+# 2. Ver que el Consumer lo recibió:
+docker compose logs -f consumer
+# Deberías ver: "📧 NUEVO EVENTO RECIBIDO"
+
+# 3. Publicar evento completo:
 curl -X POST http://localhost:8080/api/ventas/evento \
   -H "Content-Type: application/json" \
-  -d '{"ventaId":1,"clienteEmail":"pedro@mail.com","total":18999.99,"productos":["Laptop HP"]}'
+  -d '{"ventaId":1,"clienteEmail":"cliente@mail.com","total":18999.99,"productos":["Laptop HP","Mouse"]}'
 
-# Ver logs del consumer (procesa el evento)
-docker compose logs -f consumer
-# Debe mostrar: "Notificación enviada a pedro@mail.com: Venta $18,999.99"
-
-# Ver topics en Kafka UI
-# http://localhost:8090 → Topics → venta-creada → Messages
+# 4. Ver en Kafka UI (interfaz web):
+# http://localhost:8090
+# → Topics → ventas.creada → Messages
 ```
 
-## Topics
-| Topic | Producer | Consumer | Propósito |
-|-------|----------|----------|-----------|
-| venta-creada | API Ventas | Notificador | Enviar confirmación al cliente |
-| stock-bajo | Inventario | Alertas | Notificar al gerente |
-| usuario-registrado | Auth | Welcome | Enviar email de bienvenida |
+## Accesos
+
+| Servicio | URL | Descripción |
+|----------|-----|-------------|
+| Producer API | http://localhost:8080 | Publica eventos |
+| Kafka UI | http://localhost:8090 | Ver topics, mensajes, consumers |
+| Kafka Broker | localhost:29092 | Conexión directa |
+
+## Cómo funciona
+
+```
+1. Tú haces POST /api/ventas/evento → Producer
+2. Producer envía mensaje a Kafka (topic: ventas.creada)
+3. Kafka almacena el mensaje
+4. Consumer (suscrito al topic) recibe el mensaje automáticamente
+5. Consumer "procesa" (imprime en logs, en prod enviaría email)
+```
+
+## Detener
+
+```bash
+docker compose down       # Detener
+docker compose down -v    # Detener y borrar datos
+```

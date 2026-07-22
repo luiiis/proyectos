@@ -1,0 +1,9 @@
+/* Estilos globales - Dashboard Angular */
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+html, body {
+  height: 100%;
+}

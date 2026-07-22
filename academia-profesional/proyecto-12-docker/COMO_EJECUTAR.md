@@ -1,54 +1,74 @@
-# Cómo Ejecutar - Proyecto 12: Contenerización Docker
+# Cómo Ejecutar - Proyecto 12: Docker
 
-## ¿Qué construimos?
-Dockerizar un stack completo: Angular + Spring Boot + PostgreSQL + Redis + Nginx.
-Demuestra multi-stage builds, redes, volúmenes, health checks y optimización de imágenes.
+## Requisitos
+- Docker 24+ (`docker --version`)
+- Docker Compose v2 (`docker compose version`)
 
-## Ejecutar
+## Ejecutar todo el stack
+
 ```bash
 cd academia-profesional/proyecto-12-docker
+
+# Construir y levantar 5 servicios
 docker compose up --build -d
 
-# Ver estado
-docker compose ps
-
-# Acceder:
-# Frontend: http://localhost
-# API: http://localhost:8080/api/productos
-# Swagger: http://localhost:8080/swagger-ui.html
-# PgAdmin: http://localhost:5050 (admin@admin.com / admin)
+# Esperar ~60 segundos (build del backend)
 ```
 
-## Comandos útiles
+## Verificar que funciona
+
 ```bash
-# Ver logs
+# Ver estado de todos los servicios
+docker compose ps
+
+# Probar el backend
+curl http://localhost:8080/api/productos
+
+# Probar caché Redis (2da llamada es más rápida)
+curl http://localhost:8080/api/productos   # 1ra: ~200ms (PostgreSQL)
+curl http://localhost:8080/api/productos   # 2da: ~5ms (Redis cache)
+
+# Ver info del contenedor
+curl http://localhost:8080/api/info
+
+# Health check
+curl http://localhost:8080/actuator/health
+```
+
+## Accesos
+
+| Servicio | URL | Descripción |
+|----------|-----|-------------|
+| Backend API | http://localhost:8080 | Spring Boot + Redis cache |
+| PgAdmin | http://localhost:5050 | GUI para PostgreSQL |
+| PostgreSQL | localhost:5432 | BD directa |
+| Redis | localhost:6379 | Cache |
+
+PgAdmin login: admin@admin.com / admin
+
+## Comandos útiles
+
+```bash
+# Ver logs del backend
 docker compose logs -f backend
 
-# Reconstruir solo backend
-docker compose up --build backend -d
-
-# Entrar a un contenedor
+# Entrar al contenedor
 docker exec -it docker-backend sh
 
 # Ver tamaño de imágenes
 docker images | grep docker
 
-# Detener
+# Detener todo
 docker compose down
 
-# Detener + borrar datos
+# Detener y borrar datos
 docker compose down -v
 ```
 
-## Estructura
-```
-proyecto-12-docker/
-├── docker-compose.yml          ← Orquesta 5 servicios
-├── backend/
-│   └── Dockerfile              ← Multi-stage (build + runtime)
-├── frontend/
-│   ├── Dockerfile              ← Multi-stage (node build + nginx)
-│   └── nginx.conf              ← Reverse proxy config
-├── CONSTRUCCION.md             ← Por qué cada decisión
-└── COMO_EJECUTAR.md
-```
+## Errores comunes
+
+| Error | Causa | Solución |
+|-------|-------|----------|
+| Port 5432 in use | PostgreSQL local corriendo | Detener PostgreSQL local |
+| Build fails | Sin internet para descargar deps | Verificar conexión |
+| OOMKilled | Poca RAM asignada a Docker | Docker Desktop → Settings → Resources → 4GB+ |
