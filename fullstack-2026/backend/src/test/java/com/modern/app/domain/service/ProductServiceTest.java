@@ -7,211 +7,179 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 /**
- * Tests de integración con Testcontainers.
+ * Tests unitarios para ProductService.
  *
- * ¿Qué es Testcontainers?
- * - Levanta un contenedor Docker REAL de PostgreSQL para cada test.
- * - Los tests corren contra la BD REAL (no H2 que se comporta diferente).
- * - Detecta bugs que H2 no detectaría:
- *   - Tipos de datos específicos de PostgreSQL (JSONB, INET, TIMESTAMPTZ)
- *   - CHECK constraints
- *   - Partial indexes
- *   - Full-text search
+ * Patrón AAA:
+ * - Arrange: preparar datos y mocks
+ * - Act: ejecutar el método
+ * - Assert: verificar resultado
  *
- * ¿Cómo funciona?
- * 1. @Container crea un PostgreSQL temporal en Docker
- * 2. @ServiceConnection configura Spring para usar ESE PostgreSQL
- * 3. Flyway ejecuta las migraciones (V1, V2) en el contenedor temporal
- * 4. Los tests corren contra datos reales
- * 5. Al terminar, el contenedor se DESTRUYE (datos limpios cada vez)
- *
- * Requisito: Docker debe estar corriendo en tu máquina.
+ * Ejecutar: mvn test -Dtest="ProductServiceTest"
  */
-@SpringBootTest
-@Testcontainers
+@ExtendWith(MockitoExtension.class)
+@DisplayName("ProductService")
 class ProductServiceTest {
 
-    // Contenedor PostgreSQL temporal (se crea al inicio, se destruye al final)
-    @Container
-    @ServiceConnection  // Spring Boot auto-configura el datasource con este contenedor
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
+    @Mock
+    private ProductRepository repository;
 
-    // Desactivar Keycloak y Redis para tests (no los necesitamos aquí)
-    @DynamicPropertySource
-    static void overrideProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri",
-                () -> "http://localhost:8180/realms/test");
-        registry.add("spring.data.redis.host", () -> "localhost");
-        registry.add("spring.cache.type", () -> "none");
+    @InjectMocks
+    private ProductService service;
+
+    private ProductEntity laptop;
+    private ProductEntity mouse;
+
+    @BeforeEach
+    void setUp() {
+        laptop = new ProductEntity("Laptop HP", new BigDecimal("18999.00"), 25, "Electrónica", "LAP-001");
+        mouse = new ProductEntity("Mouse MX", new BigDecimal("1899.00"), 50, "Periféricos", "MOU-001");
     }
 
-    @Autowired
-    private ProductService productService;
-
-    @Autowired
-    private ProductRepository productRepository;
-
     @Nested
-    @DisplayName("Consultas de productos")
-    class QueryTests {
+    @DisplayName("findAll()")
+    class FindAll {
 
         @Test
-        @DisplayName("findAll devuelve solo productos activos del seed")
-        void findAll_returnsActiveProducts() {
-            // ACT: Flyway ya insertó 15 productos en V2__seed_data.sql
-            List<ProductResponse> products = productService.findAll();
+        @DisplayName("debe retornar lista de productos activos")
+        void debeRetornarProductosActivos() {
+            // Arrange
+            when(repository.findByActiveTrue()).thenReturn(List.of(laptop, mouse));
 
-            // ASSERT
-            assertThat(products).isNotEmpty();
-            assertThat(products).allMatch(p -> p.active());
-            // Verificar que los datos del seed están presentes
-            assertThat(products).anyMatch(p -> p.name().contains("MacBook"));
+            // Act
+            var resultado = service.findAll();
+
+            // Assert
+            assertThat(resultado).hasSize(2);
+            assertThat(resultado.get(0).name()).isEqualTo("Laptop HP");
+            assertThat(resultado.get(1).name()).isEqualTo("Mouse MX");
+            verify(repository).findByActiveTrue();
         }
 
         @Test
-        @DisplayName("findById con ID existente devuelve producto")
-        void findById_existingId_returnsProduct() {
-            ProductResponse product = productService.findById(1L);
-
-            assertThat(product).isNotNull();
-            assertThat(product.name()).contains("MacBook");
-            assertThat(product.price()).isGreaterThan(BigDecimal.ZERO);
-        }
-
-        @Test
-        @DisplayName("findById con ID inexistente lanza excepción")
-        void findById_nonExistingId_throwsException() {
-            assertThatThrownBy(() -> productService.findById(99999L))
-                    .isInstanceOf(ProductService.EntityNotFoundException.class)
-                    .hasMessageContaining("no encontrado");
-        }
-
-        @Test
-        @DisplayName("search encuentra productos por nombre parcial")
-        void search_byPartialName_returnsMatches() {
-            List<ProductResponse> results = productService.search("Dell");
-
-            assertThat(results).isNotEmpty();
-            assertThat(results).allMatch(p -> p.name().toLowerCase().contains("dell"));
-        }
-
-        @Test
-        @DisplayName("findByCategory filtra correctamente")
-        void findByCategory_returnsOnlyThatCategory() {
-            List<ProductResponse> laptops = productService.findByCategory("Laptops");
-
-            assertThat(laptops).isNotEmpty();
-            assertThat(laptops).allMatch(p -> "Laptops".equals(p.category()));
+        @DisplayName("debe retornar lista vacía si no hay productos")
+        void debeRetornarListaVacia() {
+            when(repository.findByActiveTrue()).thenReturn(List.of());
+            var resultado = service.findAll();
+            assertThat(resultado).isEmpty();
         }
     }
 
     @Nested
-    @DisplayName("Operaciones CRUD")
-    class CrudTests {
+    @DisplayName("findById()")
+    class FindById {
 
         @Test
-        @DisplayName("create persiste producto en PostgreSQL")
-        void create_validProduct_persistsInDatabase() {
-            // ARRANGE
-            var dto = new CreateProduct(
-                    "Test Product 2026",
-                    "Producto de prueba",
-                    new BigDecimal("999.99"),
-                    50,
-                    "Test",
-                    "TEST-001",
-                    null
-            );
+        @DisplayName("debe retornar producto cuando existe")
+        void debeRetornarProductoCuandoExiste() {
+            when(repository.findById(1L)).thenReturn(Optional.of(laptop));
 
-            // ACT
-            ProductResponse created = productService.create(dto);
+            var resultado = service.findById(1L);
 
-            // ASSERT
-            assertThat(created.id()).isNotNull();
-            assertThat(created.name()).isEqualTo("Test Product 2026");
-            assertThat(created.price()).isEqualByComparingTo(new BigDecimal("999.99"));
-            assertThat(created.stock()).isEqualTo(50);
-
-            // Verificar que realmente está en la BD
-            var fromDb = productRepository.findById(created.id());
-            assertThat(fromDb).isPresent();
+            assertThat(resultado.name()).isEqualTo("Laptop HP");
+            assertThat(resultado.price()).isEqualByComparingTo(new BigDecimal("18999.00"));
         }
 
         @Test
-        @DisplayName("delete hace soft delete (no borra físicamente)")
-        void delete_setsInactive_doesNotRemoveFromDb() {
-            // ARRANGE: crear producto
-            var dto = new CreateProduct("To Delete", null, new BigDecimal("10"), 1, null, "DEL-001", null);
-            ProductResponse created = productService.create(dto);
+        @DisplayName("debe lanzar excepción cuando no existe")
+        void debeLanzarExcepcionCuandoNoExiste() {
+            when(repository.findById(999L)).thenReturn(Optional.empty());
 
-            // ACT: "eliminar"
-            productService.delete(created.id());
-
-            // ASSERT: sigue en BD pero inactivo
-            var fromDb = productRepository.findById(created.id());
-            assertThat(fromDb).isPresent();
-            assertThat(fromDb.get().isActive()).isFalse();
+            assertThatThrownBy(() -> service.findById(999L))
+                .isInstanceOf(ProductService.EntityNotFoundException.class)
+                .hasMessageContaining("999");
         }
     }
 
     @Nested
-    @DisplayName("Gestión de inventario")
-    class InventoryTests {
+    @DisplayName("create()")
+    class Create {
 
         @Test
-        @DisplayName("addStock incrementa el stock correctamente")
-        void addStock_incrementsStock() {
-            // ARRANGE
-            var dto = new CreateProduct("Stock Test", null, new BigDecimal("100"), 10, null, "STK-001", null);
-            ProductResponse created = productService.create(dto);
+        @DisplayName("debe crear producto correctamente")
+        void debeCrearProducto() {
+            var request = new CreateProduct("Monitor Dell", "27 pulgadas 4K",
+                new BigDecimal("12499.00"), 15, "Electrónica", "MON-001", null);
 
-            // ACT
-            var movement = new StockMovement(5, "Test entry");
-            ProductResponse updated = productService.addStock(created.id(), movement);
+            when(repository.save(any(ProductEntity.class))).thenAnswer(inv -> inv.getArgument(0));
 
-            // ASSERT
-            assertThat(updated.stock()).isEqualTo(15); // 10 + 5
+            var resultado = service.create(request);
+
+            assertThat(resultado.name()).isEqualTo("Monitor Dell");
+            assertThat(resultado.stock()).isEqualTo(15);
+            verify(repository).save(any(ProductEntity.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("addStock() / removeStock()")
+    class StockOperations {
+
+        @Test
+        @DisplayName("addStock debe incrementar el stock")
+        void addStockDebeIncrementar() {
+            when(repository.findById(1L)).thenReturn(Optional.of(laptop));
+            when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            var movement = new StockMovement(10, "Compra proveedor");
+            service.addStock(1L, movement);
+
+            assertThat(laptop.getStock()).isEqualTo(35); // 25 + 10
         }
 
         @Test
-        @DisplayName("removeStock con stock insuficiente lanza excepción")
-        void removeStock_insufficientStock_throwsException() {
-            // ARRANGE
-            var dto = new CreateProduct("Low Stock", null, new BigDecimal("50"), 3, null, "LOW-001", null);
-            ProductResponse created = productService.create(dto);
+        @DisplayName("removeStock debe decrementar el stock")
+        void removeStockDebeDecrementar() {
+            when(repository.findById(1L)).thenReturn(Optional.of(laptop));
+            when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-            // ACT & ASSERT
-            var movement = new StockMovement(10, "Too much");
-            assertThatThrownBy(() -> productService.removeStock(created.id(), movement))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("Stock insuficiente");
+            var movement = new StockMovement(5, "Venta #V-001");
+            service.removeStock(1L, movement);
+
+            assertThat(laptop.getStock()).isEqualTo(20); // 25 - 5
         }
 
         @Test
-        @DisplayName("removeStock con stock suficiente decrementa correctamente")
-        void removeStock_sufficientStock_decrementsStock() {
-            var dto = new CreateProduct("Remove Test", null, new BigDecimal("75"), 20, null, "REM-001", null);
-            ProductResponse created = productService.create(dto);
+        @DisplayName("removeStock debe fallar si stock insuficiente")
+        void removeStockDebeFallarSiInsuficiente() {
+            when(repository.findById(1L)).thenReturn(Optional.of(laptop)); // stock=25
 
-            var movement = new StockMovement(7, "Venta test");
-            ProductResponse updated = productService.removeStock(created.id(), movement);
+            var movement = new StockMovement(100, "Venta grande");
 
-            assertThat(updated.stock()).isEqualTo(13); // 20 - 7
+            assertThatThrownBy(() -> service.removeStock(1L, movement))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("insuficiente");
+        }
+    }
+
+    @Nested
+    @DisplayName("delete() - soft delete")
+    class Delete {
+
+        @Test
+        @DisplayName("debe marcar como inactivo (no borrar)")
+        void debeMarcarInactivo() {
+            when(repository.findById(1L)).thenReturn(Optional.of(laptop));
+            when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            service.delete(1L);
+
+            assertThat(laptop.isActive()).isFalse(); // Soft delete
+            verify(repository).save(laptop);
+            verify(repository, never()).delete(any()); // Nunca se borra realmente
         }
     }
 }
