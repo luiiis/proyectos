@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>Admin</title>
+<style>
+    body { font-family: system-ui; padding: 24px; background: #fff3e0; }
+    .card { background: white; padding: 24px; border-radius: 8px; max-width: 600px; margin: 0 auto; }
+    a { color: #1a237e; }
+</style>
+</head>
+<body>
+<div class="card">
+    <h2>🔑 Panel de Administración</h2>
+    <p>Solo usuarios con rol <strong>ADMIN</strong> pueden ver esta página.</p>
+    <p>Usuario actual: <strong th:text="${username}"></strong></p>
+    <p><a href="/dashboard">← Volver al Dashboard</a></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,70 @@
+# ════════════════════════════════════════════════════════════════
+# GitHub Actions: CI/CD Pipeline
+# Se ejecuta en cada push a main o pull request
+# ════════════════════════════════════════════════════════════════
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ─── Job 1: Tests del Backend ───
+  backend-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run tests
+        run: mvn test
+        working-directory: backend
+
+      - name: Build JAR
+        run: mvn package -DskipTests
+        working-directory: backend
+
+  # ─── Job 2: Build del Frontend ───
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Build
+        run: npm run build -- --configuration=production
+        working-directory: frontend
+
+  # ─── Job 3: Deploy (solo en push a main) ───
+  deploy:
+    needs: [backend-test, frontend-build]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to server
+        run: echo "Deploy step - configurar según tu servidor"
+        # Opciones:
+        # - SSH + docker-compose pull && docker-compose up -d
+        # - Azure Web App deploy
+        # - AWS ECS deploy

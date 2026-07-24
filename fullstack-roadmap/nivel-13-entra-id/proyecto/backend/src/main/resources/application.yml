@@ -1,0 +1,39 @@
+# ════════════════════════════════════════════════════════════════
+# Proyecto 13: Microsoft Entra ID
+# Spring Boot como Resource Server (valida tokens de Entra ID)
+# ════════════════════════════════════════════════════════════════
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-entra-id
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Tu Tenant ID de Azure (reemplazar con el tuyo)
+          issuer-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID:tu-tenant-id}/v2.0
+          # Verificar la audiencia del token
+          audiences: ${AZURE_CLIENT_ID:tu-client-id}
+
+  # Login dual: también soportar JWT local
+  # Para usuarios que no tienen cuenta Microsoft
+  datasource:
+    url: jdbc:mysql://localhost:3306/auth_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: Root123!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+# ═══ Variables de Azure (configurar como variables de entorno) ═══
+azure:
+  tenant-id: ${AZURE_TENANT_ID:tu-tenant-id}
+  client-id: ${AZURE_CLIENT_ID:tu-client-id}
+  client-secret: ${AZURE_CLIENT_SECRET:tu-client-secret}

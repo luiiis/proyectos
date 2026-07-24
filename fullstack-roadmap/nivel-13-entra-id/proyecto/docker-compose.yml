@@ -1,0 +1,55 @@
+# ════════════════════════════════════════════════════════════════
+# Nivel 13: Microsoft Entra ID
+# ════════════════════════════════════════════════════════════════
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: n13-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: Root123!
+      MYSQL_DATABASE: auth_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: n13-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/auth_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Root123!
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      AZURE_CLIENT_SECRET: ${AZURE_CLIENT_SECRET}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app-network
+
+volumes:
+  mysql_data:
+
+networks:
+  app-network:
+    driver: bridge
+
+# Nota: Para Entra ID necesitas configurar las variables AZURE_* en un archivo .env
+# Crear archivo .env en esta carpeta:
+# AZURE_TENANT_ID=tu-tenant-id
+# AZURE_CLIENT_ID=tu-client-id
+# AZURE_CLIENT_SECRET=tu-secret

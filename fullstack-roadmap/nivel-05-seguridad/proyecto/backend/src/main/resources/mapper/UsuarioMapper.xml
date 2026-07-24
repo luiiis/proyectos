@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.softwarelee.auth.mapper.UsuarioMapper">
+
+    <!-- Buscar por username -->
+    <select id="findByUsername" resultType="Usuario">
+        SELECT * FROM usuarios
+        WHERE username = #{username} AND activo = true
+    </select>
+
+    <!-- Buscar por ID -->
+    <select id="findById" resultType="Usuario">
+        SELECT * FROM usuarios WHERE id = #{id}
+    </select>
+
+    <!-- Roles de un usuario -->
+    <select id="findRolesByUsuarioId" resultType="com.softwarelee.auth.model.Rol">
+        SELECT r.*
+        FROM roles r
+        INNER JOIN usuarios_roles ur ON r.id = ur.rol_id
+        WHERE ur.usuario_id = #{usuarioId}
+    </select>
+
+    <!-- Insertar usuario -->
+    <insert id="insert" parameterType="Usuario" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO usuarios (username, email, password_hash, nombre, activo)
+        VALUES (#{username}, #{email}, #{passwordHash}, #{nombre}, true)
+    </insert>
+
+    <!-- Listar todos -->
+    <select id="findAll" resultType="Usuario">
+        SELECT * FROM usuarios WHERE activo = true ORDER BY username
+    </select>
+
+</mapper>

@@ -1,0 +1,32 @@
+# ════════════════════════════════════════════════════════════════
+# Dockerfile para el Backend (Spring Boot)
+# Multi-stage build: compilar + ejecutar en imagen ligera
+# ════════════════════════════════════════════════════════════════
+
+# --- Etapa 1: Compilar ---
+FROM eclipse-temurin:21-jdk AS builder
+WORKDIR /app
+COPY backend/pom.xml .
+COPY backend/src ./src
+
+# Descargar dependencias (se cachea si pom.xml no cambia)
+RUN apt-get update && apt-get install -y maven
+RUN mvn dependency:resolve
+
+# Compilar (sin tests para ser más rápido)
+RUN mvn package -DskipTests
+
+# --- Etapa 2: Ejecutar ---
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=builder /app/target/*.jar app.jar
+
+# Puerto que expone la aplicación
+EXPOSE 8080
+
+# Variables de entorno por defecto (se sobreescriben con docker-compose)
+ENV SPRING_PROFILES_ACTIVE=prod
+ENV JAVA_OPTS="-Xms256m -Xmx512m"
+
+# Comando de inicio
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

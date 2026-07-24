@@ -1,0 +1,9 @@
+server:
+  port: 8080
+
+spring:
+  ldap:
+    urls: ${SPRING_LDAP_URLS:ldap://localhost:389}
+    base: ${SPRING_LDAP_BASE:dc=softwarelee,dc=com}
+    username: ${SPRING_LDAP_USERNAME:cn=admin,dc=softwarelee,dc=com}
+    password: ${SPRING_LDAP_PASSWORD:admin123}

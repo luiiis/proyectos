@@ -1,0 +1,25 @@
+services:
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mini11-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - app-network
+
+  backend:
+    build: { context: ./backend, dockerfile: Dockerfile }
+    container_name: mini11-backend
+    environment:
+      SPRING_MAIL_HOST: mailhog
+      SPRING_MAIL_PORT: 1025
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mailhog
+    networks:
+      - app-network
+
+networks:
+  app-network:

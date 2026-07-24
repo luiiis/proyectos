@@ -1,0 +1,61 @@
+# ════════════════════════════════════════════════════════════════
+# Nivel 06: Funciones Profesionales (correo, auditoría, reset password)
+# ════════════════════════════════════════════════════════════════
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: n06-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: Root123!
+      MYSQL_DATABASE: auth_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # MailHog: servidor SMTP falso para desarrollo (captura correos sin enviarlos)
+  mailhog:
+    image: mailhog/mailhog
+    container_name: n06-mailhog
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # UI para ver correos capturados
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: n06-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/auth_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Root123!
+      SPRING_MAIL_HOST: mailhog
+      SPRING_MAIL_PORT: 1025
+      APP_JWT_SECRET: MiClaveSecretaSuperSeguraQueDebeSerDe256BitsMinimo123456789012345
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app-network
+
+volumes:
+  mysql_data:
+
+networks:
+  app-network:
+    driver: bridge
+
+# Para ver correos capturados: http://localhost:8025

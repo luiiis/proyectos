@@ -1,0 +1,14 @@
+package com.softwarelee.auth.dto;
+
+import jakarta.validation.constraints.NotBlank;
+
+public class RefreshRequest {
+
+    @NotBlank(message = "El refreshToken es obligatorio")
+    private String refreshToken;
+
+    public RefreshRequest() {}
+
+    public String getRefreshToken() { return refreshToken; }
+    public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
+}

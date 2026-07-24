@@ -1,0 +1,50 @@
+services:
+  ldap:
+    image: osixia/openldap:1.5.0
+    container_name: mini-ldap
+    environment:
+      LDAP_ORGANISATION: "Mi Empresa"
+      LDAP_DOMAIN: "softwarelee.com"
+      LDAP_ADMIN_PASSWORD: "admin123"
+    ports:
+      - "389:389"
+    volumes:
+      - ldap_data:/var/lib/ldap
+    networks:
+      - app-network
+
+  ldap-admin:
+    image: osixia/phpldapadmin:0.9.0
+    container_name: mini-ldap-admin
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: ldap
+    ports:
+      - "8090:80"
+    depends_on:
+      - ldap
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mini03-backend
+    environment:
+      SPRING_LDAP_URLS: ldap://ldap:389
+      SPRING_LDAP_BASE: dc=softwarelee,dc=com
+      SPRING_LDAP_USERNAME: cn=admin,dc=softwarelee,dc=com
+      SPRING_LDAP_PASSWORD: admin123
+    ports:
+      - "8080:8080"
+    depends_on:
+      - ldap
+    networks:
+      - app-network
+
+volumes:
+  ldap_data:
+
+networks:
+  app-network:
+    driver: bridge

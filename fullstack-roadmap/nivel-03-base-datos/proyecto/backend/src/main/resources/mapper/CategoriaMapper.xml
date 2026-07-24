@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+    MYBATIS XML MAPPER: Queries SQL para la tabla categorias.
+    Namespace debe coincidir con la interface Java.
+-->
+<mapper namespace="com.softwarelee.productos.mapper.CategoriaMapper">
+
+    <!-- ═══ SELECT: Listar todas las categorías activas ═══ -->
+    <select id="findAll" resultType="Categoria">
+        SELECT *
+        FROM categorias
+        WHERE activa = true
+        ORDER BY nombre
+    </select>
+
+    <!-- ═══ SELECT: Buscar por ID ═══ -->
+    <select id="findById" resultType="Categoria">
+        SELECT *
+        FROM categorias
+        WHERE id = #{id}
+    </select>
+
+    <!-- ═══ SELECT: Buscar por nombre (LIKE) ═══ -->
+    <select id="findByNombre" resultType="Categoria">
+        SELECT *
+        FROM categorias
+        WHERE activa = true
+          AND nombre LIKE CONCAT('%', #{nombre}, '%')
+        ORDER BY nombre
+    </select>
+
+    <!-- ═══ SELECT: Buscar por nombre exacto (para validar duplicados) ═══ -->
+    <select id="findByNombreExacto" resultType="Categoria">
+        SELECT *
+        FROM categorias
+        WHERE nombre = #{nombre}
+          AND activa = true
+    </select>
+
+    <!-- ═══ INSERT ═══ -->
+    <insert id="insert" parameterType="Categoria" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO categorias (nombre, descripcion, activa)
+        VALUES (#{nombre}, #{descripcion}, true)
+    </insert>
+
+    <!-- ═══ UPDATE ═══ -->
+    <update id="update" parameterType="Categoria">
+        UPDATE categorias
+        SET nombre = #{nombre},
+            descripcion = #{descripcion}
+        WHERE id = #{id}
+    </update>
+
+    <!-- ═══ SOFT DELETE ═══ -->
+    <update id="softDelete">
+        UPDATE categorias SET activa = false WHERE id = #{id}
+    </update>
+
+    <!-- ═══ COUNT ═══ -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM categorias WHERE activa = true
+    </select>
+
+</mapper>

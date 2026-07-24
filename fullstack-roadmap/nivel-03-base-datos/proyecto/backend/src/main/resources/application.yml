@@ -1,0 +1,41 @@
+# ════════════════════════════════════════════════════════════════
+# Proyecto 3: API Productos con MyBatis
+# ════════════════════════════════════════════════════════════════
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-productos
+
+  # ═══ CONEXIÓN A BASE DE DATOS ═══
+  # Opción A: MySQL
+  datasource:
+    url: jdbc:mysql://localhost:3306/productos_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: Root123!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # Opción B: PostgreSQL (descomentar y comentar MySQL)
+  # datasource:
+  #   url: jdbc:postgresql://localhost:5432/productos_db
+  #   username: postgres
+  #   password: postgres123
+  #   driver-class-name: org.postgresql.Driver
+
+  # ═══ FLYWAY (Migraciones automáticas) ═══
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+# ═══ MyBatis ═══
+mybatis:
+  # Dónde están los archivos XML con las queries
+  mapper-locations: classpath:mapper/*.xml
+  # Mapear automáticamente columnas snake_case a campos camelCase
+  configuration:
+    map-underscore-to-camel-case: true
+  # Paquete base de los modelos
+  type-aliases-package: com.softwarelee.productos.model

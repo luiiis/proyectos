@@ -1,0 +1,51 @@
+package com.softwarelee.productos.model;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+/**
+ * MODELO: representa un producto en la base de datos.
+ * Los campos coinciden con las columnas de la tabla "productos".
+ * MyBatis mapea automáticamente columnas → campos (map-underscore-to-camel-case: true).
+ */
+public class Producto {
+    private Long id;
+    private String nombre;
+    private String descripcion;
+    private BigDecimal precio;
+    private int existencia;
+    private Long categoriaId;
+    private String sku;
+    private boolean activo;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    // Campo extra: nombre de la categoría (viene del JOIN)
+    private String categoriaNombre;
+
+    public Producto() {}
+
+    // Getters y Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public String getDescripcion() { return descripcion; }
+    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+    public BigDecimal getPrecio() { return precio; }
+    public void setPrecio(BigDecimal precio) { this.precio = precio; }
+    public int getExistencia() { return existencia; }
+    public void setExistencia(int existencia) { this.existencia = existencia; }
+    public Long getCategoriaId() { return categoriaId; }
+    public void setCategoriaId(Long categoriaId) { this.categoriaId = categoriaId; }
+    public String getSku() { return sku; }
+    public void setSku(String sku) { this.sku = sku; }
+    public boolean isActivo() { return activo; }
+    public void setActivo(boolean activo) { this.activo = activo; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public String getCategoriaNombre() { return categoriaNombre; }
+    public void setCategoriaNombre(String categoriaNombre) { this.categoriaNombre = categoriaNombre; }
+}

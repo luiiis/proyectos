@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--
+    MYBATIS XML MAPPER: Aquí escribes el SQL REAL.
+
+    Ventajas de XML vs anotaciones:
+    - Queries complejas son legibles
+    - Puedes usar <if>, <where>, <foreach> para queries dinámicas
+    - Separas el SQL del Java
+    - Más fácil de debuguear
+-->
+<mapper namespace="com.softwarelee.productos.mapper.ProductoMapper">
+
+    <!-- ═══ SELECT: Listar todos (con JOIN a categorías) ═══ -->
+    <select id="findAll" resultType="Producto">
+        SELECT p.*,
+               c.nombre AS categoria_nombre
+        FROM productos p
+        LEFT JOIN categorias c ON p.categoria_id = c.id
+        WHERE p.activo = true
+        ORDER BY p.nombre
+    </select>
+
+    <!-- ═══ SELECT: Buscar por ID ═══ -->
+    <select id="findById" resultType="Producto">
+        SELECT p.*,
+               c.nombre AS categoria_nombre
+        FROM productos p
+        LEFT JOIN categorias c ON p.categoria_id = c.id
+        WHERE p.id = #{id}
+    </select>
+
+    <!-- ═══ SELECT: Buscar por nombre (LIKE) ═══ -->
+    <select id="findByNombre" resultType="Producto">
+        SELECT p.*,
+               c.nombre AS categoria_nombre
+        FROM productos p
+        LEFT JOIN categorias c ON p.categoria_id = c.id
+        WHERE p.activo = true
+          AND p.nombre LIKE CONCAT('%', #{nombre}, '%')
+        ORDER BY p.nombre
+    </select>
+
+    <!-- ═══ SELECT: Filtrar por categoría ═══ -->
+    <select id="findByCategoriaId" resultType="Producto">
+        SELECT p.*,
+               c.nombre AS categoria_nombre
+        FROM productos p
+        LEFT JOIN categorias c ON p.categoria_id = c.id
+        WHERE p.activo = true
+          AND p.categoria_id = #{categoriaId}
+        ORDER BY p.nombre
+    </select>
+
+    <!-- ═══ SELECT: Productos con stock bajo ═══ -->
+    <select id="findLowStock" resultType="Producto">
+        SELECT p.*,
+               c.nombre AS categoria_nombre
+        FROM productos p
+        LEFT JOIN categorias c ON p.categoria_id = c.id
+        WHERE p.activo = true
+          AND p.existencia &lt; #{minimo}
+        ORDER BY p.existencia ASC
+    </select>
+
+    <!-- ═══ INSERT ═══ -->
+    <insert id="insert" parameterType="Producto" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO productos (nombre, descripcion, precio, existencia, categoria_id, sku, activo)
+        VALUES (#{nombre}, #{descripcion}, #{precio}, #{existencia}, #{categoriaId}, #{sku}, true)
+    </insert>
+
+    <!-- ═══ UPDATE ═══ -->
+    <update id="update" parameterType="Producto">
+        UPDATE productos
+        SET nombre = #{nombre},
+            descripcion = #{descripcion},
+            precio = #{precio},
+            existencia = #{existencia},
+            categoria_id = #{categoriaId},
+            sku = #{sku}
+        WHERE id = #{id}
+    </update>
+
+    <!-- ═══ SOFT DELETE ═══ -->
+    <update id="softDelete">
+        UPDATE productos SET activo = false WHERE id = #{id}
+    </update>
+
+    <!-- ═══ COUNT ═══ -->
+    <select id="count" resultType="long">
+        SELECT COUNT(*) FROM productos WHERE activo = true
+    </select>
+
+    <!-- ═══ PAGINACIÓN ═══ -->
+    <select id="findPaginated" resultType="Producto">
+        SELECT p.*,
+               c.nombre AS categoria_nombre
+        FROM productos p
+        LEFT JOIN categorias c ON p.categoria_id = c.id
+        WHERE p.activo = true
+        ORDER BY p.id
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+</mapper>

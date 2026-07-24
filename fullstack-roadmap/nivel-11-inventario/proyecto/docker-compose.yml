@@ -1,0 +1,73 @@
+# ════════════════════════════════════════════════════════════════
+# Nivel 11: Sistema de Inventario (Full Stack completo)
+# ════════════════════════════════════════════════════════════════
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: n11-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: Root123!
+      MYSQL_DATABASE: inventario_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: n11-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/inventario_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Root123!
+      APP_JWT_SECRET: MiClaveSecretaSuperSeguraQueDebeSerDe256BitsMinimo123456789012345
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: n11-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  # MailHog para correos de alerta de stock
+  mailhog:
+    image: mailhog/mailhog
+    container_name: n11-mailhog
+    ports:
+      - "8025:8025"
+    networks:
+      - app-network
+
+volumes:
+  mysql_data:
+
+networks:
+  app-network:
+    driver: bridge
+
+# Acceder:
+# App: http://localhost
+# API: http://localhost:8080
+# Correos: http://localhost:8025
